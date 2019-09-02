@@ -25,6 +25,7 @@ setup(
         'picamera',
         'pillow',
         'RPi.GPIO',
+        'requests',
     ],
     python_requires='>=3.5.3',
 )
