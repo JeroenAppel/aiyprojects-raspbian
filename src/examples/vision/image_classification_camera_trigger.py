@@ -24,6 +24,7 @@ image_classification_camera.py --num_frames 10
 import argparse
 import contextlib
 import requests
+import time
 
 from aiy.vision.inference import CameraInference
 from aiy.vision.models import image_classification
@@ -31,6 +32,10 @@ from picamera import PiCamera
 
 def classes_info(classes):
     return ', '.join('%s (%.2f)' % pair for pair in classes)
+
+def getMilliseconds():
+    millis = int(round(time.time() * 1000))
+    return millis
 
 @contextlib.contextmanager
 def CameraPreview(camera, enabled):
@@ -42,30 +47,26 @@ def CameraPreview(camera, enabled):
         if enabled:
             camera.stop_preview()
 
-def postRequest(label, score):
+def postRequest(label, score, operation):
     # defining the api-endpoint  
-    API_ENDPOINT = "http://pastebin.com/api/api_post.php"
+    API_ENDPOINT = "https://fruitninja-sandbox.mxapps.io/rest/aitrigger/v1/fruit/" + operation
     
     # your API key here 
-    API_KEY = "a1f20a39b76f05943513b8de15187c4d"
+    USER = 'googleaiy'
+    PASS = 'ZE76!9@C7t#fqRgg'
   
     # your source code here 
-    message = ''' 
-    A new banana has been detected!
-    Score: ''' + str(score)
+    image = 'The image feature has not been implemented.'
   
     # data to be sent to api 
-    data = {'api_dev_key':API_KEY, 
-           'api_option':'paste', 
-           'api_paste_code':message, 
-           'api_paste_format':'python'} 
+    data = {'FruitName':label, 
+           'Score':str(score), 
+           'Base64Image':image }
   
     # sending post request and saving response as response object 
-    r = requests.post(url = API_ENDPOINT, data = data) 
-  
-    # extracting response text  
-    pastebin_url = r.text 
-    print("The pastebin URL is:%s"%pastebin_url) 
+    r = requests.post(url = API_ENDPOINT, data = data, auth = (USER, PASS))
+
+    print("An update has been send to FruitNinja") 
 
 def main():
     parser = argparse.ArgumentParser('Image classification camera inference example.')
@@ -87,7 +88,8 @@ def main():
                 camera.annotate_text = '%s (%.2f)' % classes[0]
                 label, score = classes[0]
                 if 'banana' == label:
-                    postRequest(label, score)
+                    # TODO: Add if statements
+                    postRequest(label, score, 'add')
 
 if __name__ == '__main__':
     main()
