@@ -24,6 +24,7 @@ image_classification_camera.py --num_frames 10
 import argparse
 import contextlib
 import time
+import enum
 import requests
 
 from aiy.vision.inference import CameraInference
@@ -36,6 +37,15 @@ def classes_info(classes):
 def getMilliseconds():
     millis = int(round(time.time() * 1000))
     return millis
+
+def itemLost(lastseen, current):
+    if lastseen is None:
+        return False
+    else:
+        if (lastseen + 5000) < current:
+            return True
+        else:
+            return False
 
 @contextlib.contextmanager
 def CameraPreview(camera, enabled):
@@ -82,6 +92,24 @@ def main():
         help='Enable camera preview')
     args = parser.parse_args()
 
+    # Initialize all the fruits which are supported by the model.
+    class wait_status(enum.Enum): 
+        waitForRemove = 1
+        waitForAdd = 2
+
+    current_time = None
+    supported_fruits = ('banana', 'apple', 'orange')
+    fruit_seen = {
+        'banana':0,
+        'apple':0,
+        'orange':0
+        }
+    fruit_status = {
+        'banana':wait_status.waitForAdd,
+        'apple':wait_status.waitForAdd,
+        'orange':wait_status.waitForAdd
+        }
+
     with PiCamera(sensor_mode=4, framerate=30) as camera, \
          CameraPreview(camera, enabled=args.preview), \
          CameraInference(image_classification.model()) as inference:
@@ -90,10 +118,26 @@ def main():
             print(classes_info(classes))
             if classes:
                 camera.annotate_text = '%s (%.2f)' % classes[0]
-                label, score = classes[0]
-                if 'banana' == label:
-                    # TODO: Add if statements
-                    postRequest(label, score, 'add')
+                current_time = getMilliseconds()
+                for item in classes:
+                    # label, score = classes[0]
+                    label, score = item
+                    if label in supported_fruits:
+                        fruit_seen[label] = current_time
+                        if fruit_status[label] == wait_status.waitForAdd:
+                            print('Send message to FruitNinja: ' + label + ' added')
+                            postRequest(label, score, 'add')
+                            fruit_status[label] = wait_status.waitForRemove
+
+                for fruit in fruit_status:
+                    # We will now check all the fruits which are not detected. TODO: Verify if the fruit lookup in classes is working as expected
+                    if (fruit in classes) == False:
+                        if fruit_status[fruit] == wait_status.waitForRemove:
+                            lostItem = itemLost(fruit_seen[fruit], current_time)
+                            if lostItem:
+                                print('Send message to FruitNinja: ' + fruit + ' removed')
+                                postRequest(label, score, 'remove')
+                                fruit_status[fruit] = wait_status.waitForAdd
 
 if __name__ == '__main__':
     main()
