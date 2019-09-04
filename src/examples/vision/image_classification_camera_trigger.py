@@ -23,6 +23,8 @@ image_classification_camera.py --num_frames 10
 """
 import argparse
 import contextlib
+import requests
+import time
 
 from aiy.vision.inference import CameraInference
 from aiy.vision.models import image_classification
@@ -30,6 +32,10 @@ from picamera import PiCamera
 
 def classes_info(classes):
     return ', '.join('%s (%.2f)' % pair for pair in classes)
+
+def getMilliseconds():
+    millis = int(round(time.time() * 1000))
+    return millis
 
 @contextlib.contextmanager
 def CameraPreview(camera, enabled):
@@ -40,6 +46,27 @@ def CameraPreview(camera, enabled):
     finally:
         if enabled:
             camera.stop_preview()
+
+def postRequest(label, score, operation):
+    # defining the api-endpoint  
+    API_ENDPOINT = "https://fruitninja-sandbox.mxapps.io/rest/aitrigger/v1/fruit/" + operation
+    
+    # your API key here 
+    USER = 'googleaiy'
+    PASS = 'ZE76!9@C7t#fqRgg'
+  
+    # your source code here 
+    image = 'The image feature has not been implemented.'
+  
+    # data to be sent to api 
+    data = {'FruitName':label, 
+           'Score':str(score), 
+           'Base64Image':image }
+  
+    # sending post request and saving response as response object 
+    r = requests.post(url = API_ENDPOINT, data = data, auth = (USER, PASS))
+
+    print("An update has been send to FruitNinja") 
 
 def main():
     parser = argparse.ArgumentParser('Image classification camera inference example.')
@@ -59,6 +86,10 @@ def main():
             print(classes_info(classes))
             if classes:
                 camera.annotate_text = '%s (%.2f)' % classes[0]
+                label, score = classes[0]
+                if 'banana' == label:
+                    # TODO: Add if statements
+                    postRequest(label, score, 'add')
 
 if __name__ == '__main__':
     main()
