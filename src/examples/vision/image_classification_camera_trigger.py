@@ -136,7 +136,7 @@ def main():
                             lostItem = itemLost(fruit_seen[fruit], current_time)
                             if lostItem:
                                 print('Send message to FruitNinja: ' + fruit + ' removed')
-                                postRequest(label, score, 'remove')
+                                postRequest(fruit, score, 'remove')
                                 fruit_status[fruit] = wait_status.waitForAdd
 
 if __name__ == '__main__':
