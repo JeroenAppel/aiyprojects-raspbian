@@ -23,8 +23,8 @@ image_classification_camera.py --num_frames 10
 """
 import argparse
 import contextlib
-import requests
 import time
+import requests
 
 from aiy.vision.inference import CameraInference
 from aiy.vision.models import image_classification
@@ -48,25 +48,29 @@ def CameraPreview(camera, enabled):
             camera.stop_preview()
 
 def postRequest(label, score, operation):
-    # defining the api-endpoint  
+    # the current sandbox environment
     API_ENDPOINT = "https://fruitninja-sandbox.mxapps.io/rest/aitrigger/v1/fruit/" + operation
     
-    # your API key here 
+    # the auth credentials should be moved to environment variables soon
     USER = 'googleaiy'
     PASS = 'ZE76!9@C7t#fqRgg'
   
-    # your source code here 
+    # the image feature will be implemented later 
     image = 'The image feature has not been implemented.'
   
-    # data to be sent to api 
+    # data to be sent to FruitNinja 
     data = {'FruitName':label, 
            'Score':str(score), 
            'Base64Image':image }
   
-    # sending post request and saving response as response object 
-    r = requests.post(url = API_ENDPOINT, data = data, auth = (USER, PASS))
-
-    print("An update has been send to FruitNinja") 
+    # sending post request and print response whenever this actions runs in to an error
+    r = requests.post(url = API_ENDPOINT, json = data, auth = (USER, PASS))
+    
+    if r.status_code == requests.codes.ok:
+        print('An update has been send to FruitNinja')
+    else:
+        print('Something went wrong while informing FruitNinja') 
+        print('Content: ' + str(r.content))
 
 def main():
     parser = argparse.ArgumentParser('Image classification camera inference example.')
