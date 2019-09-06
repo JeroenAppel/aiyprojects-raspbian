@@ -98,16 +98,18 @@ def main():
         waitForAdd = 2
 
     current_time = None
-    supported_fruits = ('banana', 'apple', 'orange')
+    supported_fruits = ('banana', 'Granny Smith', 'orange', 'cucumber/cuke')
     fruit_seen = {
         'banana':0,
-        'apple':0,
-        'orange':0
+        'Granny Smith':0,
+        'orange':0,
+        'cucumber/cuke':0
         }
     fruit_status = {
         'banana':wait_status.waitForAdd,
-        'apple':wait_status.waitForAdd,
-        'orange':wait_status.waitForAdd
+        'Granny Smith':wait_status.waitForAdd,
+        'orange':wait_status.waitForAdd,
+        'cucumber/cuke':wait_status.waitForAdd
         }
 
     with PiCamera(sensor_mode=4, framerate=30) as camera, \
